@@ -1,0 +1,50 @@
+# ----------------------
+# Python Virtual Env
+# ----------------------
+venv/
+.venv/
+env/
+ENV/
+kash/
+
+# ----------------------
+# Python Cache / Bytecode
+# ----------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ----------------------
+# VS Code
+# ----------------------
+.vscode/
+
+# Allow Excalidraw files inside .vscode (optional)
+!.vscode/*.excalidraw
+!.vscode/*.excalidraw.json
+
+# ----------------------
+# OS files
+# ----------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------
+# Logs & temp files
+# ----------------------
+*.log
+*.tmp
+*.swp
+
+# ----------------------
+# Environment variables
+# ----------------------
+.env
+.env.*
+
+# ----------------------
+# Build / distribution
+# ----------------------
+build/
+dist/
+*.egg-info/
