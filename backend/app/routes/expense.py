@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.schemas.expense import ExpenseCreate, ExpenseResponse
-from app.services.expense_service import create_expense, get_expenses
+from app.schemas.expense import ExpenseCreate, ExpenseResponse, ExpenseUpdate
+from app.services.expense_service import create_expense, get_expenses, get_expense_by_expense_id, delete_expense, update_expense_by_id
 from app.config.database import get_db
 from app.utils.dependency import get_current_user
 from app.models.user import User
+from fastapi import HTTPException
 
 router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
@@ -12,13 +13,65 @@ router = APIRouter(prefix="/expenses", tags=["Expenses"])
 def add_expense(
     expense: ExpenseCreate, 
     db: Session = Depends(get_db),
-    get_current_user: User = Depends(get_current_user)):
+    current_user: User = Depends(get_current_user)):
     
-    return create_expense(db, user_id=get_current_user.id, data=expense)
+    return create_expense(db, user_id=current_user.id, data=expense)
 
 @router.get("/", response_model=list[ExpenseResponse])
 def list_expenses(
     db: Session = Depends(get_db),
-    get_current_user: User = Depends(get_current_user)):
+    current_user: User = Depends(get_current_user)):
     
-    return get_expenses(db, user_id=get_current_user.id)
+    return get_expenses(db, user_id=current_user.id)
+
+@router.get("/{expense_id}", response_model=ExpenseResponse)
+def get_expense(
+    expense_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)):
+
+    expense = get_expense_by_expense_id(db, expense_id)
+
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    if expense.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    return expense
+
+@router.put("/{expense_id}", response_model=ExpenseResponse)
+def update_expense_route(
+    expense_id: int,
+    expense_data: ExpenseUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)):
+
+    expense = get_expense_by_expense_id(db, expense_id)
+
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    if expense.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    update_expense = update_expense_by_id(db, expense, expense_data)
+
+    return update_expense
+
+
+@router.delete("/{expsense_id}")
+def delete_expense_route(
+    expense_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)):
+
+    expense = get_expense_by_expense_id(db, expense_id)
+
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    
+    if expense.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    return delete_expense(db, expense)
