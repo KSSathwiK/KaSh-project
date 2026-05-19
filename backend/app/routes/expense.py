@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.schemas.expense import ExpenseCreate, ExpenseResponse, ExpenseUpdate
+from app.schemas.expense import ExpenseCreate, ExpenseResponse, ExpenseUpdate, ExpenseListResponse
 from app.services.expense_service import create_expense, get_expenses, get_expense_by_expense_id, delete_expense, update_expense_by_id
 from app.config.database import get_db
 from app.utils.dependency import get_current_user
 from app.models.user import User
-from fastapi import HTTPException
+from fastapi import HTTPException, Query
 
 router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
@@ -15,14 +15,25 @@ def add_expense(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
     
-    return create_expense(db, user_id=current_user.id, data=expense)
+    return create_expense(db, user_id=current_user.id, expense_data=expense)
 
-@router.get("/", response_model=list[ExpenseResponse])
+@router.get("/", response_model=ExpenseListResponse)
 def list_expenses(
+    limit: int = Query(10, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    category: str | None = None,
+    search: str | None = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
     
-    return get_expenses(db, user_id=current_user.id)
+    return get_expenses(
+        db = db,
+        user_id=current_user.id,
+        limit=limit,
+        offset=offset,
+        category=category,
+        search=search
+    )
 
 @router.get("/{expense_id}", response_model=ExpenseResponse)
 def get_expense(

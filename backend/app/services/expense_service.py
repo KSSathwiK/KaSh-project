@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.models.expense import Expense
 from app.schemas.expense import ExpenseCreate
+from sqlalchemy import or_
 
 def create_expense(db: Session, user_id: int, expense_data: ExpenseCreate):
     expense = Expense(
@@ -15,8 +16,33 @@ def create_expense(db: Session, user_id: int, expense_data: ExpenseCreate):
     return expense
 
 
-def get_expenses(db: Session, user_id: int):
-    return db.query(Expense).filter(Expense.user_id == user_id).all()
+def get_expenses(
+    db: Session,
+    user_id: int,
+    limit: int = 10,
+    offset: int = 0,
+    category: str | None = None,
+    search: str | None = None
+    ):
+
+    # return only user specific records
+    query = db.query(Expense).filter(Expense.user_id == user_id)
+
+    # search by category
+    if category:
+        query = query.filter(Expense.category == category)
+    
+    # search by title
+    if search:
+        query = query.filter(Expense.title.ilike(f"%{search}%"))
+
+    total = query.count()
+    # pagination
+    data =  query.offset(offset).limit(limit).all()
+    
+    return {"total_items": total,
+            "data": data
+            }
 
 def get_expense_by_expense_id(db: Session, expense_id: int):
     return db.query(Expense).filter(Expense.id == expense_id).first()

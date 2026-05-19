@@ -17,5 +17,9 @@ class ExpenseUpdate(BaseModel):
     amount: Optional[float] = None
     category: Optional[str] = None
 
+class ExpenseListResponse(BaseModel):
+    total_items: int
+    data: list[ExpenseResponse]
+
     class Config:
         from_attributes = True
