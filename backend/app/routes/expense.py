@@ -41,14 +41,11 @@ def get_expense(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
 
-    expense = get_expense_by_expense_id(db, expense_id)
+    expense = get_expense_by_expense_id(db, expense_id, current_user.id)
 
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
-    
-    if expense.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
+   
     return expense
 
 @router.put("/{expense_id}", response_model=ExpenseResponse)
@@ -58,31 +55,27 @@ def update_expense_route(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
 
-    expense = get_expense_by_expense_id(db, expense_id)
+    expense = get_expense_by_expense_id(db, expense_id, current_user.id)
 
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
     
-    if expense.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
-    update_expense = update_expense_by_id(db, expense, expense_data)
 
-    return update_expense
+    updated_expense = update_expense_by_id(db, expense, expense_data)
+
+    return updated_expense
 
 
-@router.delete("/{expsense_id}")
+@router.delete("/{expense_id}")
 def delete_expense_route(
     expense_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)):
 
-    expense = get_expense_by_expense_id(db, expense_id)
+    expense = get_expense_by_expense_id(db, expense_id, current_user.id)
 
     if not expense:
         raise HTTPException(status_code=404, detail="Expense not found")
     
-    if expense.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
+
     return delete_expense(db, expense)

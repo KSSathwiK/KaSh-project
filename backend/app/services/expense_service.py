@@ -34,18 +34,26 @@ def get_expenses(
     
     # search by title
     if search:
-        query = query.filter(Expense.title.ilike(f"%{search}%"))
-
+        query = query.filter(
+        or_(
+            Expense.title.ilike(f"%{search}%"),
+            Expense.category.ilike(f"%{search}%")
+        )
+    )
     total = query.count()
     # pagination
     data =  query.offset(offset).limit(limit).all()
     
-    return {"total_items": total,
-            "data": data
-            }
+    return {
+        "total_items": total,
+        "data": data
+        }
 
-def get_expense_by_expense_id(db: Session, expense_id: int):
-    return db.query(Expense).filter(Expense.id == expense_id).first()
+def get_expense_by_expense_id(db: Session, expense_id: int, user_id: int):
+    return db.query(Expense).filter(
+        Expense.id == expense_id, 
+        Expense.user_id ==user_id
+        ).first()
 
 def update_expense_by_id(db: Session, expense, update_data):
     update_dict = update_data.model_dump(exclude_unset=True)
